@@ -17,14 +17,15 @@ app.listen(PORT, () => {
 });
 
 const wss = new WebSocketServer({ port: 3131 });
+let clickCount = 0;
 
 wss.on("connection", function connection(ws) {
   ws.on("message", function incoming(message) {
     console.log("Server received message: %s", message);
     const parsedMessage = JSON.parse(message);
-    // Nachricht diesmal an ALLE verbundenen Clients senden
-    // WICHTIG: ws.clients ist ein Set, kein Array !!!
-    // TO-DO: MIT MEHREREN CLIENTS TESTEN
+    clickCount += 1;
+    parsedMessage.clickCount = clickCount;
+
     wss.clients.forEach(function each(client) {
       if (client.readyState === ws.OPEN) {
         client.send(JSON.stringify(parsedMessage));

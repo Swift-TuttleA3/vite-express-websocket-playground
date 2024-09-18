@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import "./App.css";
+import Canvas from "./Canvas";
 
 function App() {
   const [messages, setMessages] = useState([]);
@@ -8,6 +9,7 @@ function App() {
   const [connectionStatus, setConnectionStatus] = useState("Disconnected");
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [selectedColor, setSelectedColor] = useState("");
+  const [clickCount, setClickCount] = useState(0);
   const inputRef = useRef(null);
 
   const colors = [
@@ -62,16 +64,8 @@ function App() {
     setWs(new WebSocket("ws://localhost:3131"));
   };
 
-  const sendMessage = () => {
-    if (ws && inputValue.trim() !== "" && selectedColor) {
-      const messageData = {
-        message: inputValue,
-        position: mousePosition,
-        color: selectedColor,
-      };
-      ws.send(JSON.stringify(messageData));
-      setInputValue("");
-    }
+  const incrementClickCount = () => {
+    setClickCount(clickCount + 1);
   };
 
   const handleInputChange = (event) => {
@@ -128,7 +122,12 @@ function App() {
             />
           ))}
         </div>
-        <button onClick={sendMessage}>Send</button>
+        <Canvas
+          ws={ws}
+          selectedColor={selectedColor}
+          setSelectedColor={setSelectedColor}
+          incrementClickCount={incrementClickCount}
+        />
       </div>
       <div className="card">
         <h4>Messages from Server on ws://localhost:3131</h4>
@@ -136,7 +135,7 @@ function App() {
           {messages.map((msg, index) => (
             <li key={index}>
               <span style={{ color: msg.color }}>
-                {msg.message} (x: {msg.position.x}, y: {msg.position.y}) - Color: {msg.color}
+                {msg.message} (x: {msg.position.x}, y: {msg.position.y}) - Color: {msg.color} - Timestamp: {msg.timestamp} - Click Count: {msg.clickCount}
               </span>
             </li>
           ))}
