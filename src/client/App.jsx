@@ -19,9 +19,12 @@ function App() {
 
   useEffect(() => {
     const handleMousePos = (event) => {
+      const roundedX = Math.round(event.clientX);
+      const roundedY = Math.round(event.clientY);
+      console.log(`Rounded Coordinates: x=${roundedX}, y=${roundedY}`);
       setMousePosition({
-        x: event.clientX.toFixed(3),
-        y: event.clientY.toFixed(3),
+        x: roundedX,
+        y: roundedY,
       });
     };
 
@@ -36,13 +39,16 @@ function App() {
     if (ws) {
       ws.onopen = () => {
         console.log("WebSocket connection established");
-        setConnectionStatus("Connected");
       };
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log("Message from server: ", data);
-          setMessages((prevMessages) => [...prevMessages, data]);
+          if (data.error) {
+            console.error("Server error: ", data.error);
+          } else {
+            console.log("Message from server: ", data);
+            setMessages((prevMessages) => [data, ...prevMessages]);
+          }
         } catch (error) {
           console.error("Error parsing message from server: ", error);
         }
@@ -134,7 +140,7 @@ function App() {
         <ul id="msg-box">
           {messages.map((msg, index) => (
             <li key={index}>
-              <span style={{ color: msg.color }}>
+              <span style={{ color: "black" }}>
                 {msg.message} (x: {msg.position.x}, y: {msg.position.y}) - Color: {msg.color} - Timestamp: {msg.timestamp} - Click Count: {msg.clickCount}
               </span>
             </li>

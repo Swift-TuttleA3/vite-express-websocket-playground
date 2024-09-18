@@ -1,85 +1,92 @@
 import { useState, useEffect } from "react";
 import { Stage, Layer, Rect } from "react-konva";
-import { ChromePicker } from "react-color";
+import { SignJWT } from "jose";
+
+const SECRET_KEY = "test_key"; 
 
 const Canvas = ({ ws, selectedColor, setSelectedColor, incrementClickCount }) => {
   const [rectangles, setRectangles] = useState([]);
   const [canSetPixel, setCanSetPixel] = useState(true);
-  const [showColorPicker, setShowColorPicker] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setCanSetPixel(true);
-    }, 0);
+    }, 100); // Throttling durch Setzen eines Timers
 
     return () => clearTimeout(timer);
   }, [canSetPixel]);
 
-  const handleCanvasClick = (e) => {
+  useEffect(() => {
+    if (ws) {
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.position && data.color) {
+            setRectangles((prevRectangles) => [...prevRectangles, data]);
+          }
+        } catch (error) {
+          console.error("Error parsing message from server: ", error);
+        }
+      };
+    }
+  }, [ws]);
+
+  const handleCanvasClick = async (e) => {
     if (!canSetPixel) return;
 
     const stage = e.target.getStage();
     const pointerPosition = stage.getPointerPosition();
     const newRectangle = {
-      x: pointerPosition.x,
-      y: pointerPosition.y,
+      position: {
+        x: Math.round(pointerPosition.x),
+        y: Math.round(pointerPosition.y),
+      },
       color: selectedColor,
       timestamp: new Date().toLocaleString(),
     };
+
+    // Einfache Authentifizierung
+    const token = await new SignJWT({ user: "user" })
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("2h")
+      .sign(new TextEncoder().encode(SECRET_KEY));
+
+    newRectangle.token = token;
 
     setRectangles([...rectangles, newRectangle]);
     setCanSetPixel(false);
 
-    // Senden der Daten an den Server
-    const messageData = {
-      position: { x: pointerPosition.x, y: pointerPosition.y },
-      color: selectedColor,
-      timestamp: new Date().toLocaleString(),
-    };
-    ws.send(JSON.stringify(messageData));
-    incrementClickCount();
-  };
-
-  const handleColorChange = (color) => {
-    setSelectedColor(color.hex);
+    // Überprüfen, ob die WebSocket-Verbindung vorhanden ist
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(newRectangle));
+      incrementClickCount();
+    } else {
+      console.error("WebSocket connection is not open.");
+    }
   };
 
   return (
-    <div className="flex">
-      <div className="w-1/4 p-1 bg-gray-200">
-        <div className="text-center mb-2">
-          {canSetPixel ? "You can set a pixel" : "Please wait..."}
-        </div>
-        <div
-          className="w-2 h-2 m-1 cursor-pointer border-l-2"
-          style={{ backgroundColor: selectedColor }}
-          onClick={() => setShowColorPicker(!showColorPicker)}
-        />
-        {showColorPicker && (
-          <ChromePicker color={selectedColor} onChange={handleColorChange} />
-        )}
-      </div>
-      <div className="w-3/4">
-        <Stage
-          width={window.innerWidth * 0.25}
-          height={window.innerHeight * 0.25}
-          onClick={handleCanvasClick}
-          style={{ border: "5px solid black", cursor: "crosshair" }}
-        >
-          <Layer>
-            {rectangles.map((rect, index) => (
-              <Rect
-                key={index}
-                x={rect.x}
-                y={rect.y}
-                width={1}
-                height={1}
-                fill={rect.color}
-              />
-            ))}
-          </Layer>
-        </Stage>
-      </div>
+    <div>
+      <Stage
+        width={500}
+        height={500}
+        onClick={handleCanvasClick}
+        style={{ border: "5px solid black", cursor: "crosshair" }}
+      >
+        <Layer>
+          {rectangles.map((rect, index) => (
+            <Rect
+              key={index}
+              x={rect.position.x}
+              y={rect.position.y}
+              width={1}
+              height={1}
+              fill={rect.color}
+            />
+          ))}
+        </Layer>
+      </Stage>
     </div>
   );
 };

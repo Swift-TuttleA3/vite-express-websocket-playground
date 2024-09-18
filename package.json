@@ -11,6 +11,8 @@
   "dependencies": {
     "cross-env": "^7.0.3",
     "express": "^4.18.2",
+    "jose": "^5.9.2",
+    "jsonwebtoken": "^9.0.2",
     "react": "^18.2.0",
     "react-color": "^2.19.3",
     "react-dom": "^18.2.0",

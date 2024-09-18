@@ -38,10 +38,3 @@ p {
   justify-content: center;
   margin: 1em 0;
 }
-
-canvas {
-  width: 25vw;
-  height: 25vh;
-  border: 1px solid black;
-  margin-top: 1em;
-}
