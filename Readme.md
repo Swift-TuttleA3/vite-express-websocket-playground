@@ -2,7 +2,7 @@
 
 ## Ausgangsbasis ist https://github.com/szymmis/vite-express?tab=readme-ov-file
 
-### Klonen und cd vite-express-test
+### Klonen und cd vite-express-template
 
 ### npm install
 
