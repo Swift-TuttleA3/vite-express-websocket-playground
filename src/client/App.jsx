@@ -1,10 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import reactLogo from "./assets/react.svg";
 import "./App.css";
 
 function App() {
-  const [count, setCount] = useState(0);
-  const [showButton, setShowButton] = useState(false);
   const [messages, setMessages] = useState([]);
   const [ws, setWs] = useState(null);
   const [inputValue, setInputValue] = useState("");
@@ -14,17 +11,17 @@ function App() {
   const inputRef = useRef(null);
 
   useEffect(() => {
-    const handleMouseMove = (event) => {
+    const handleMousePos = (event) => {
       setMousePosition({
         x: event.clientX.toFixed(3),
         y: event.clientY.toFixed(3),
       });
     };
 
-    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mousemove", handleMousePos);
 
     return () => {
-      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mousemove", handleMousePos);
     };
   }, []);
 
@@ -130,7 +127,7 @@ function App() {
 
 export default App;
 
-/*
+/* Variante ohne Mausposition
 import { useState, useEffect, useRef } from "react";
 import reactLogo from "./assets/react.svg";
 import "./App.css";
