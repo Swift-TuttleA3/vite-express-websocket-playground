@@ -28,7 +28,7 @@
         <p className="read-the-docs">
           Click on the Vite and React logos to learn more
         </p>
-        <p>Hey, click on the hidden Button to reveal your possible routes on this site (F12).</p>
+        <p>Click on the hidden Button to reveal your possible routes on this site (F12).</p>
         <div className="card">
         {showButton ? (
       <button onClick={() => console.log("Routes: /home, /admin, /admin/users, /admin/users/:id")}>
