@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Stage, Layer, Rect } from "react-konva";
 import { SignJWT } from "jose";
 
-const SECRET_KEY = "test_key"; 
+const SECRET_KEY = "test_key";                                                           // Geheimnis !!! AN ENVIRONMENT VARIABLEN DENKEN !!!
 
 const Canvas = ({ ws, selectedColor, setSelectedColor, incrementClickCount }) => {
   const [rectangles, setRectangles] = useState([]);
@@ -11,7 +11,7 @@ const Canvas = ({ ws, selectedColor, setSelectedColor, incrementClickCount }) =>
   useEffect(() => {
     const timer = setTimeout(() => {
       setCanSetPixel(true);
-    }, 100); // Throttling durch Setzen eines Timers
+    }, 100);                                                                                // Timer !!!
 
     return () => clearTimeout(timer);
   }, [canSetPixel]);

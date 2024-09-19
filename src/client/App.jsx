@@ -7,7 +7,10 @@ function App() {
   const [ws, setWs] = useState(null);
   const [inputValue, setInputValue] = useState("");
   const [connectionStatus, setConnectionStatus] = useState("Disconnected");
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  /* 
+    Wird nur im Zusammenspiel mit dem handleMousePos-Hook für das Debugging benötigt:
+    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  */
   const [selectedColor, setSelectedColor] = useState("");
   const [clickCount, setClickCount] = useState(0);
   const inputRef = useRef(null);
@@ -16,6 +19,12 @@ function App() {
     "red", "blue", "green", "yellow", "orange", "purple", "pink", "brown", "black", "white",
     "cyan", "magenta", "lime", "maroon", "navy", "olive", "teal", "violet", "gold", "silver"
   ];
+/* 
+   Der folgende useEffect-Hook wird im Grunde genommen nicht mehr benötigt. Er gibt nur die Mausposition in der Konsole des Browsers aus.
+   Zum Debuggen super, deshalb bleibt er noch kurz drin. Würde eine gute Vorlage für ein eigenes Hook abgeben:))) MERKEN !!!
+   Ich sollte mehrere dieser Hooks schrieiben, die auf unterschiedliche Events reagieren und die Daten in der Konsole ausgeben oder in einer log-Datei speichern.
+   
+   DRAN DENKEN   !!!!  LOG-DATEI für das Projekt !!!
 
   useEffect(() => {
     const handleMousePos = (event) => {
@@ -34,11 +43,13 @@ function App() {
       window.removeEventListener("mousemove", handleMousePos);
     };
   }, []);
-
+*/
+  
   useEffect(() => {
     if (ws) {
       ws.onopen = () => {
         console.log("WebSocket connection established");
+        setConnectionStatus("Connected");
       };
       ws.onmessage = (event) => {
         try {
