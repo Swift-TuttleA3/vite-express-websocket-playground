@@ -4,13 +4,10 @@ import Canvas from "./Canvas";
 
 function App() {
   const [messages, setMessages] = useState([]);
+  const [rectangles, setRectangles] = useState([]);
   const [ws, setWs] = useState(null);
   const [inputValue, setInputValue] = useState("");
   const [connectionStatus, setConnectionStatus] = useState("Disconnected");
-  /* 
-    Wird nur im Zusammenspiel mit dem handleMousePos-Hook für das Debugging benötigt:
-    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  */
   const [selectedColor, setSelectedColor] = useState("");
   const [clickCount, setClickCount] = useState(0);
   const inputRef = useRef(null);
@@ -19,32 +16,7 @@ function App() {
     "red", "blue", "green", "yellow", "orange", "purple", "pink", "brown", "black", "white",
     "cyan", "magenta", "lime", "maroon", "navy", "olive", "teal", "violet", "gold", "silver"
   ];
-/* 
-   Der folgende useEffect-Hook wird im Grunde genommen nicht mehr benötigt. Er gibt nur die Mausposition in der Konsole des Browsers aus.
-   Zum Debuggen super, deshalb bleibt er noch kurz drin. Würde eine gute Vorlage für ein eigenes Hook abgeben:))) MERKEN !!!
-   Ich sollte mehrere dieser Hooks schrieiben, die auf unterschiedliche Events reagieren und die Daten in der Konsole ausgeben oder in einer log-Datei speichern.
-   
-   DRAN DENKEN   !!!!  LOG-DATEI für das Projekt !!!
 
-  useEffect(() => {
-    const handleMousePos = (event) => {
-      const roundedX = Math.round(event.clientX);
-      const roundedY = Math.round(event.clientY);
-      console.log(`Rounded Coordinates: x=${roundedX}, y=${roundedY}`);
-      setMousePosition({
-        x: roundedX,
-        y: roundedY,
-      });
-    };
-
-    window.addEventListener("mousemove", handleMousePos);
-
-    return () => {
-      window.removeEventListener("mousemove", handleMousePos);
-    };
-  }, []);
-*/
-  
   useEffect(() => {
     if (ws) {
       ws.onopen = () => {
@@ -59,6 +31,9 @@ function App() {
           } else {
             console.log("Message from server: ", data);
             setMessages((prevMessages) => [data, ...prevMessages]);
+            if (data.position && data.color) {
+              setRectangles((prevRectangles) => [...prevRectangles, data]);
+            }
           }
         } catch (error) {
           console.error("Error parsing message from server: ", error);
@@ -144,6 +119,8 @@ function App() {
           selectedColor={selectedColor}
           setSelectedColor={setSelectedColor}
           incrementClickCount={incrementClickCount}
+          rectangles={rectangles}
+          setRectangles={setRectangles}
         />
       </div>
       <div className="card">

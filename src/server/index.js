@@ -1,12 +1,15 @@
 import express from "express";
 import { WebSocketServer } from "ws";
-import { jwtVerify } from "jose";
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
-const PORT = 3000;
-const SECRET_KEY = new TextEncoder().encode("test_key"); // Verwenden Sie eine sicherere Methode zur Verwaltung von Schlüsseln
+const PORT = process.env.PORT || 3000;
+const SECRET_KEY = process.env.SECRET_KEY || "default_secret_key"; // Geheimnis für JWT
 
-app.use(express.static("public"));
+app.use(express.static("public")); // Statische Dateien im Ordner "public" bereitstellen
 
 app.get("/", (req, res) => {
   res.send("Hallo! Du bist zuhause.");
@@ -20,6 +23,9 @@ const wss = new WebSocketServer({ port: 3131 });
 let clickCount = 0;
 
 wss.on("connection", function connection(ws) {
+  // Generieren eines JWT beim Verbindungsaufbau
+  const token = jwt.sign({ user: "user" }, SECRET_KEY, { expiresIn: "2h" });
+
   ws.on("message", async function incoming(message) {
     try {
       const parsedMessage = JSON.parse(message);
@@ -38,11 +44,7 @@ wss.on("connection", function connection(ws) {
       }
 
       // Authentifizierung
-      if (!parsedMessage.token) {
-        throw new Error("Unauthorized");
-      }
-
-      const { payload } = await jwtVerify(parsedMessage.token, SECRET_KEY);
+      const payload = jwt.verify(token, SECRET_KEY);
       if (!payload.user) {
         throw new Error("Unauthorized");
       }
@@ -65,6 +67,7 @@ wss.on("connection", function connection(ws) {
     JSON.stringify({
       message: "Testnachricht vom Server",
       position: { x: 0, y: 0 },
+      token: token, // Senden des JWT an den Client
     })
   );
 });

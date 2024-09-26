@@ -1,37 +1,18 @@
 import { useState, useEffect } from "react";
 import { Stage, Layer, Rect } from "react-konva";
-import { SignJWT } from "jose";
 
-const SECRET_KEY = "test_key";                                                           // Geheimnis !!! AN ENVIRONMENT VARIABLEN DENKEN !!!
-
-const Canvas = ({ ws, selectedColor, setSelectedColor, incrementClickCount }) => {
-  const [rectangles, setRectangles] = useState([]);
+const Canvas = ({ ws, selectedColor, setSelectedColor, incrementClickCount, rectangles, setRectangles }) => {
   const [canSetPixel, setCanSetPixel] = useState(true);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setCanSetPixel(true);
-    }, 100);                                                                                // Timer !!!
+    }, 100); // Throttling durch Setzen eines Timers
 
     return () => clearTimeout(timer);
   }, [canSetPixel]);
 
-  useEffect(() => {
-    if (ws) {
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (data.position && data.color) {
-            setRectangles((prevRectangles) => [...prevRectangles, data]);
-          }
-        } catch (error) {
-          console.error("Error parsing message from server: ", error);
-        }
-      };
-    }
-  }, [ws]);
-
-  const handleCanvasClick = async (e) => {
+  const handleCanvasClick = (e) => {
     if (!canSetPixel) return;
 
     const stage = e.target.getStage();
@@ -44,15 +25,6 @@ const Canvas = ({ ws, selectedColor, setSelectedColor, incrementClickCount }) =>
       color: selectedColor,
       timestamp: new Date().toLocaleString(),
     };
-
-    // Einfache Authentifizierung
-    const token = await new SignJWT({ user: "user" })
-      .setProtectedHeader({ alg: "HS256" })
-      .setIssuedAt()
-      .setExpirationTime("2h")
-      .sign(new TextEncoder().encode(SECRET_KEY));
-
-    newRectangle.token = token;
 
     setRectangles([...rectangles, newRectangle]);
     setCanSetPixel(false);
