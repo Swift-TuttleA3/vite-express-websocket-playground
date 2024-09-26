@@ -17,6 +17,7 @@ const Canvas = ({ ws, selectedColor, incrementClickCount, rectangles, setRectang
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
+          console.log("Message received in Canvas:", data); // Log empfangene Nachrichten
           if (data.type === "initialData") {
             setRectangles(data.data);
           } else {

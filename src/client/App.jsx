@@ -1,10 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import WebSocketComponent from "./WebSocketComponent";
-import Canvas from "./Canvas";
+import Canvas from "./canvas";
 import ReadOnlyCanvas from "./ReadOnlyCanvas";
 import ColorPicker from "./ColorPicker";
 import useFetchCanvasData from "./useFetchCanvasData";
-import useInputHandlers from "./useInputHandlers";
 import "./App.css";
 
 function App() {
@@ -13,7 +12,6 @@ function App() {
   const [connectionStatus, setConnectionStatus] = useState("Disconnected");
   const [selectedColor, setSelectedColor] = useState("");
   const [clickCount, setClickCount] = useState(0);
-  const inputRef = useRef(null);
 
   const { rectangles, setRectangles, dbRectangles, fetchDbData } = useFetchCanvasData();
 
@@ -21,9 +19,10 @@ function App() {
     setClickCount(clickCount + 1);
   };
 
+
   useEffect(() => {
-    console.log("Messages state updated:", messages); // Log Nachrichten im Zustand
-  }, [messages]);
+    console.log("Rectangles state updated:", rectangles); // Log Rechtecke im Zustand
+  }, [rectangles]);
 
   return (
     <div className="App">
@@ -54,22 +53,22 @@ function App() {
       </div>
       <div className="card">
         <div style={{ display: "flex" }}>
-          <ul className="msg-box" style={{ flex: 1 }}>
-            <h2>Messages from Websocket-Server on ws://localhost:3131</h2>
-            {messages.map((msg, index) => (
+          <ul id="ws-box" style={{ flex: 1 }}>
+            <h2>Data-Stream from Websocket-Server on ws://localhost:3131</h2>
+            {rectangles.slice().reverse().map((wsrect, index) => (
               <li key={index}>
                 <span style={{ color: "black" }}>
-                  {msg.message} (x: {msg.position?.x}, y: {msg.position?.y}) - Color: {msg.color} - Timestamp: {msg.timestamp} - Click Count: {msg.clickCount}
+                  (x: {wsrect.position?.x}, y: {wsrect.position?.y}) - Color: {wsrect.color} - Timestamp: {wsrect.timestamp} - UserID: {wsrect.userId} - Click Count: {wsrect.clickCount}
                 </span>
               </li>
             ))}
           </ul>
-          <ul className="msg-box" style={{ flex: 1 }}>
+          <ul id="mongodb-box" style={{ flex: 1 }}>
             <h2>Messages from mongoDB-Server on ws://localhost:3000</h2>
-            {dbRectangles.map((rect, index) => (
+            {dbRectangles.slice().reverse().map((dbrect, index) => (
               <li key={index}>
                 <span style={{ color: "black" }}>
-                  (x: {rect.position.x}, y: {rect.position.y}) - Color: {rect.color} - Timestamp: {rect.timestamp} - Click Count: {rect.clickCount}
+                  (x: {dbrect.position?.x}, y: {dbrect.position?.y}) - Color: {dbrect.color} - Timestamp: {dbrect.timestamp} - Click Count: {dbrect.clickCount}
                 </span>
               </li>
             ))}

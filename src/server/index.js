@@ -70,8 +70,6 @@ const wss = new WebSocketServer({ port: 3131 });
 let clickCount = 0;
 let userCount = 0; // Zählvariable für die Anzahl der Benutzer
 
-// index.js
-
 wss.on("connection", async function connection(ws) {
   // Erhöhen der Benutzeranzahl bei einer neuen Verbindung
   userCount++;

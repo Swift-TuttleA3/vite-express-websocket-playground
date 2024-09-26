@@ -31,7 +31,16 @@ p {
   padding: 1em;
 }
 
-.msg-box {
+#ws-box {
+  padding: 0.5em;
+  margin: 1em;
+  border: 1px solid #2d2b2b;
+  border-radius: 0.5em;
+  color: #2d2b2b;
+  background-color: #ffdea1;
+}
+
+#mongodb-box {
   padding: 0.5em;
   margin: 1em;
   border: 1px solid #2d2b2b;

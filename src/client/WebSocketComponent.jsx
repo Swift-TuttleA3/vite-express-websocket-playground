@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const WebSocketComponent = ({ setWs, setConnectionStatus, setMessages }) => {
+const WebSocketComponent = ({ setWs, setConnectionStatus, setWebsocketData }) => {
   const [ws, setLocalWs] = useState(null);
 
   useEffect(() => {
@@ -12,11 +12,11 @@ const WebSocketComponent = ({ setWs, setConnectionStatus, setMessages }) => {
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          console.log("Message received from WebSocket:", data); // Log empfangene Nachrichten
+          console.log("Data received from WebSocket:", data); // Log empfangene Nachrichten
           if (data.error) {
             console.error("Server error: ", data.error);
           } else {
-            setMessages((prevMessages) => [...prevMessages, data]);
+            setWebsocketData((prevWebsocketData) => [...prevWebsocketData, data]);
           }
         } catch (error) {
           console.error("Error parsing message from server: ", error);

@@ -9,6 +9,7 @@ const useFetchCanvasData = () => {
     fetch("http://localhost:3000/api/canvas")
       .then((response) => response.json())
       .then((data) => {
+        console.log("Fetched canvas data:", data); // Log abgerufene Daten
         setRectangles(data);
         setDbRectangles(data);
       })
@@ -19,6 +20,7 @@ const useFetchCanvasData = () => {
     fetch("http://localhost:3000/api/canvas")
       .then((response) => response.json())
       .then((data) => {
+        console.log("Fetched DB data:", data); // Log abgerufene Daten
         setDbRectangles(data);
       })
       .catch((error) => console.error("Error fetching canvas data: ", error));
