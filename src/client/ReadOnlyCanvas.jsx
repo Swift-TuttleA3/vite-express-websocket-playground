@@ -2,7 +2,7 @@ import { Stage, Layer, Rect } from "react-konva";
 
 const ReadOnlyCanvas = ({ rectangles }) => {
   return (
-    <div>
+    <div id="canvas">
       <Stage
         width={480}
         height={320}
@@ -12,8 +12,8 @@ const ReadOnlyCanvas = ({ rectangles }) => {
           {rectangles.map((rect, index) => (
             <Rect
               key={index}
-              x={rect.position.x}
-              y={rect.position.y}
+              x={rect.position_x}
+              y={rect.position_y}
               width={1}
               height={1}
               fill={rect.color}

@@ -1,12 +1,16 @@
 import express from "express";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import cors from "cors";
 import { WebSocketServer } from "ws";
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
-import mongoose from "mongoose";
-import cors from "cors";
-import Canvas from "./models/canvasSchema.js";
+import Canvas from "./models/canvas.js"; // Importieren des Canvas-Schemas
 
 dotenv.config();
+
+// Überprüfen Sie, ob die Umgebungsvariablen korrekt geladen werden
+console.log("MONGO_URI:", process.env.MONGO_URI);
+console.log("SECRET_KEY:", process.env.SECRET_KEY);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -20,86 +24,40 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-
-app.use(cors());
 app.use(express.static("public")); // Statische Dateien im Ordner "public" bereitstellen
-
-app.get("/", (req, res) => {
-  res.send("Hallo! Du bist zuhause.");
-});
-
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
-
-// Verbindung zu MongoDB herstellen
-const mongoURI = process.env.MONGO_URI || "mongodb://localhost:27017/canvasDB";
-
-mongoose.connect(mongoURI);
-
-mongoose.connection.on("connected", () => {
-  console.log("Connected to MongoDB");
-});
-
-mongoose.connection.on("error", (err) => {
-  console.error("Error connecting to MongoDB: ", err);
-});
-
-// Route zum Abrufen der Canvas-Daten
-app.get("/api/canvas", async (req, res) => {
-  try {
-    const data = await Canvas.find({}).select("-_id -__v");
-    res.json(data);
-  } catch (error) {
-    res.status(500).json({ error: "Error fetching canvas data" });
-  }
-});
-
-// Route zum Abrufen der Canvas-Daten für einen bestimmten Benutzer
-app.get("/api/canvas/:userId", async (req, res) => {
-  try {
-    const userId = req.params.userId;
-    const data = await Canvas.find({ userId: userId });
-    res.json(data);
-  } catch (error) {
-    res.status(500).json({ error: "Error fetching canvas data" });
-  }
-});
 
 const wss = new WebSocketServer({ port: 3131 });
 let clickCount = 0;
 let userCount = 0; // Zählvariable für die Anzahl der Benutzer
 
 wss.on("connection", async function connection(ws) {
-  // Erhöhen der Benutzeranzahl bei einer neuen Verbindung
+  console.log("New WebSocket connection established");
   userCount++;
-  // Senden der aktuellen Benutzeranzahl an alle verbundenen Clients
+  console.log("Current user count:", userCount);
   wss.clients.forEach(function each(client) {
     if (client.readyState === ws.OPEN) {
       client.send(JSON.stringify({ type: "userCount", count: userCount }));
     }
   });
 
-  // Generieren eines JWT beim Verbindungsaufbau
-  const token = jwt.sign({ user: "user" }, SECRET_KEY, { expiresIn: "2h" });
-
-  // Senden der gespeicherten Pixel-Daten an den neuen Client
-  const pixelData = await Canvas.find({});
-  ws.send(JSON.stringify({ type: "initialData", data: pixelData }));
+  const token = jwt.sign({ user: "placeholder_user_id" }, SECRET_KEY, {
+    expiresIn: "2h",
+  });
 
   ws.on("message", async function incoming(message) {
     try {
       const parsedMessage = JSON.parse(message);
+      console.log("Received message from client:", parsedMessage);
 
-      // Validierung der Eingabedaten
+      // Validierung der Eingabedaten basierend auf dem Schema
       if (
-        !parsedMessage.position ||
-        typeof parsedMessage.position.x !== "number" ||
-        typeof parsedMessage.position.y !== "number" ||
-        !parsedMessage.color ||
+        typeof parsedMessage.position_x !== "number" ||
+        typeof parsedMessage.position_y !== "number" ||
         typeof parsedMessage.color !== "string" ||
-        !parsedMessage.timestamp ||
-        typeof parsedMessage.timestamp !== "string"
+        typeof parsedMessage.edit !== "object" ||
+        typeof parsedMessage.edit.time !== "string" ||
+        typeof parsedMessage.edit.clickCounter !== "number" ||
+        typeof parsedMessage.edit.byUser !== "string"
       ) {
         throw new Error("Invalid message format");
       }
@@ -111,13 +69,18 @@ wss.on("connection", async function connection(ws) {
       }
 
       clickCount += 1;
-      parsedMessage.clickCount = clickCount;
-      parsedMessage.userId = payload.userId; // Benutzer-ID hinzufügen
+      parsedMessage.edit.clickCounter = clickCount;
 
       // Speichern des neuen Pixels in der Datenbank
-      const newPixel = new Canvas(parsedMessage);
-      await newPixel.save();
+      console.log("Saving new pixel data to DB:", parsedMessage);
+      await Canvas.updateOne(
+        { _id: parsedMessage._id },
+        { $set: { color: parsedMessage.color, edit: parsedMessage.edit } },
+        { upsert: true }
+      );
 
+      // Senden der aktualisierten Daten an alle verbundenen Clients
+      console.log("Broadcasting new pixel data to all clients:", parsedMessage);
       wss.clients.forEach(function each(client) {
         if (client.readyState === ws.OPEN) {
           client.send(JSON.stringify(parsedMessage));
@@ -125,15 +88,11 @@ wss.on("connection", async function connection(ws) {
       });
     } catch (error) {
       console.error("Error processing message: ", error.message);
-      console.error("Received message: ", message.toString());
-      ws.send(JSON.stringify({ error: error.message }));
     }
   });
-
   ws.on("close", () => {
-    // Verringern der Benutzeranzahl bei einer Trennung
     userCount--;
-    // Senden der aktuellen Benutzeranzahl an alle verbundenen Clients
+    console.log("User disconnected. Current user count:", userCount);
     wss.clients.forEach(function each(client) {
       if (client.readyState === ws.OPEN) {
         client.send(JSON.stringify({ type: "userCount", count: userCount }));
@@ -143,9 +102,25 @@ wss.on("connection", async function connection(ws) {
 
   ws.send(
     JSON.stringify({
-      message: "Testnachricht vom Server",
-      position: { x: 0, y: 0 },
-      token: token, // Senden des JWT an den Client
+      type: "initialData",
+      token: token,
     })
   );
+});
+
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
+
+mongoose.connection.on("connected", () => {
+  console.log("Connected to MongoDB");
+});
+
+mongoose.connection.on("error", (err) => {
+  console.error("Error connecting to MongoDB: ", err);
+});
+
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
 });
