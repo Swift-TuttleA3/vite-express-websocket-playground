@@ -44,7 +44,7 @@ p {
   border: 1px solid #2d2b2b;
   border-radius: 0.5em;
   color: #2d2b2b;
-  background-color: #ffdea1;
+  background-color: #754310;
 }
 
 #mongodb-box {
@@ -53,7 +53,7 @@ p {
   border: 1px solid #2d2b2b;
   border-radius: 0.5em;
   color: #2d2b2b;
-  background-color: #ffdea1;
+  background-color: #2b6d74;
 }
 
 .color-picker {
@@ -61,4 +61,31 @@ p {
   flex-wrap: wrap;
   justify-content: center;
   margin: 1em 0;
+}
+
+.traffic-light {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 1em;
+}
+
+.light {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  margin: 5px 0;
+  background-color: gray;
+}
+
+.light.red {
+  background-color: red;
+}
+
+.light.yellow {
+  background-color: yellow;
+}
+
+.light.green {
+  background-color: green;
 }

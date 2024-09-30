@@ -1,25 +1,28 @@
 import { useState } from "react";
 
 const useFetchCanvasData = () => {
-  const [rectangles, setRectangles] = useState([]);
-  const [dbRectangles, setDbRectangles] = useState([]);
-  const [page, setPage] = useState(1);
-  const [pageSize] = useState(1000);
+  const [rectangles, setRectangles] = useState([]); // Zustandshaken für Rechtecke im Canvas
+  const [dbRectangles, setDbRectangles] = useState([]); // Zustandshaken für Rechtecke aus der Datenbank
+  const [page, setPage] = useState(1); // Zustandshaken für aktuelle Seite
+  const [pageSize] = useState(1000); // Zustandshaken für Seitengröße
 
+  // Funktion zum Abrufen von Daten aus der Datenbank
   const fetchDbData = () => {
-    console.log("Fetching DB data...");
+    console.log("Daten aus der Datenbank abrufen...");
     fetch(`http://localhost:3000/api/canvas?page=${page}&pageSize=${pageSize}`)
       .then((response) => {
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error(`HTTP-Fehler! Status: ${response.status}`);
         }
         return response.json();
       })
       .then((data) => {
-        console.log("Fetched DB data:", data);
+        console.log("Daten aus der Datenbank abgerufen:", data);
         setDbRectangles(data);
       })
-      .catch((error) => console.error("Error fetching canvas data: ", error));
+      .catch((error) =>
+        console.error("Fehler beim Abrufen der Canvas-Daten: ", error)
+      );
   };
 
   return { rectangles, setRectangles, dbRectangles, fetchDbData, setPage };

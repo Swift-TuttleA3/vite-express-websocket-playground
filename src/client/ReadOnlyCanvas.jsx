@@ -1,5 +1,7 @@
 import { Stage, Layer, Rect } from "react-konva";
 
+// Komponente ReadOnlyCanvas
+// Diese Komponente rendert ein Canvas, das nur zum Lesen verwendet werden kann
 const ReadOnlyCanvas = ({ rectangles }) => {
   return (
     <div id="canvas">
@@ -9,6 +11,7 @@ const ReadOnlyCanvas = ({ rectangles }) => {
         style={{ border: "5px solid black", cursor: "not-allowed" }}
       >
         <Layer>
+          {/* Rendere jedes Rechteck in der rectangles-Liste */}
           {rectangles.map((rect, index) => (
             <Rect
               key={index}

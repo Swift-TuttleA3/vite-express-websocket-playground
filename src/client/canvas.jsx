@@ -1,7 +1,22 @@
 import { useState, useEffect } from "react";
 import { Stage, Layer, Rect } from "react-konva";
 
-const Canvas = ({ ws, selectedColor, incrementClickCount, rectangles, setRectangles, isConnected, currentUser }) => {
+/**
+ * Komponente für die Zeichenfläche.
+ * 
+ * @component
+ * @param {Object} props - Die Eigenschaften der Komponente.
+ * @param {WebSocket} props.ws - Die WebSocket-Verbindung.
+ * @param {string} props.selectedColor - Die ausgewählte Farbe.
+ * @param {function} props.incrementClickCount - Eine Funktion zum Inkrementieren des Klickzählers.
+ * @param {Array} props.rectangles - Ein Array mit Rechtecken.
+ * @param {function} props.setRectangles - Eine Funktion zum Setzen des Rechteck-Arrays.
+ * @param {boolean} props.isConnected - Gibt an, ob eine Verbindung besteht.
+ * @param {Object} props.currentUser - Der aktuelle Benutzer.
+ * @param {function} props.setMongodbData - Eine Funktion zum Setzen der MongoDB-Daten.
+ * @returns {JSX.Element} Die JSX-Elemente für die Zeichenfläche.
+ */
+const Canvas = ({ ws, selectedColor, incrementClickCount, rectangles, setRectangles, isConnected, currentUser, setMongodbData }) => {
   const [canSetPixel, setCanSetPixel] = useState(true);
 
   useEffect(() => {
@@ -24,6 +39,10 @@ const Canvas = ({ ws, selectedColor, incrementClickCount, rectangles, setRectang
               break;
             case "initialData":
               console.log("Initial data received:", data.token);
+              // Speichern des Tokens oder andere Verarbeitung
+              break;
+            case "error":
+              console.error("Error received from server:", data.error);
               break;
             default:
               console.log("Received pixel data:", data);
@@ -81,6 +100,7 @@ const Canvas = ({ ws, selectedColor, incrementClickCount, rectangles, setRectang
       console.log("Sending new rectangle data to server:", colorChange);
       ws.send(JSON.stringify(colorChange));
       incrementClickCount();
+      setMongodbData((prevData) => [...prevData, JSON.stringify(colorChange)]);
     } else {
       console.error("WebSocket connection is not open.");
     }
