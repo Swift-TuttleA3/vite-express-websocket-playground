@@ -40,12 +40,8 @@ async function createPixelGrid() {
           _id: `${x}_${y}`,
           position_x: x,
           position_y: y,
-          farbe: defaultColor,
-          lastEdit: {
-            time: currentTime,
-            clickCounter: 0,
-            byUser: "Platzhalter", // Platzhalter, kann später aktualisiert werden
-          },
+          color: defaultColor,
+          timestamp: currentTime,
         };
         documents.push(document);
       }

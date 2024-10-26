@@ -61,7 +61,7 @@ function App() {
     }
   };
 
-  return (
+ return (
     <div className="App">
       <h1>Small Playground For WebSocket-Applications</h1>
       <div className="card">
@@ -71,9 +71,8 @@ function App() {
           setWs={setWs}
           setConnectionStatus={setConnectionStatus}
           setMessages={setMessages}
-          setToken={setToken}
           setWsData={setWsData}
-          setError={setError} // Fehlerzustand setzen
+          setError={setError}
         />
         <div className="traffic-light">
           <div className={`light ${connectionStatus === "Disconnected" ? "red" : connectionStatus === "Connected" ? "green" : "yellow"}`}></div>
@@ -81,8 +80,7 @@ function App() {
         <p>Verbindung: <span style={{ color: "orange" }}>{connectionStatus}</span></p>
         <p>Client: <span style={{ color: "orange" }}>{window.location.hostname}</span></p>
         <p>Server: <span style={{ color: "orange" }}>{ws ? ws.url.slice(5) : ""}</span></p>
-        <p>Token: <span style={{ color: "orange" }}>{token}</span></p>
-        <p>Error: <span style={{ color: "red" }}>{error}</span></p> {/* Fehleranzeige */}
+        <p>Error: <span style={{ color: "red" }}>{error}</span></p>
         <h3>Verbinden, Farbe wählen und in den Canvas klicken, um WebSocket und MongoDB zu testen</h3>
         <ColorPicker
           selectedColor={selectedColor}
@@ -96,7 +94,7 @@ function App() {
           rectangles={rectangles}
           setRectangles={setRectangles}
           isConnected={isConnected}
-          currentUser={{ id: "Platzhalter" }} // Ersetzen Sie dies durch die tatsächliche Benutzer-ID
+          currentUser={{ id: "Platzhalter" }}
           setMongodbData={setMongodbData}
         />
         <div>

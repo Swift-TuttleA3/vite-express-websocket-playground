@@ -10,4 +10,7 @@ export default defineConfig({
       protocol: "ws",
     },
   },
+  build: {
+    sourcemap: true, // Source Maps aktivieren
+  },
 });

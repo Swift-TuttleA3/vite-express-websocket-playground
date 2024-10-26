@@ -1,111 +1,81 @@
 import { useState, useEffect } from "react";
 import { Stage, Layer, Rect } from "react-konva";
 
-/**
- * Komponente für die Zeichenfläche.
- * 
- * @component
- * @param {Object} props - Die Eigenschaften der Komponente.
- * @param {WebSocket} props.ws - Die WebSocket-Verbindung.
- * @param {string} props.selectedColor - Die ausgewählte Farbe.
- * @param {function} props.incrementClickCount - Eine Funktion zum Inkrementieren des Klickzählers.
- * @param {Array} props.rectangles - Ein Array mit Rechtecken.
- * @param {function} props.setRectangles - Eine Funktion zum Setzen des Rechteck-Arrays.
- * @param {boolean} props.isConnected - Gibt an, ob eine Verbindung besteht.
- * @param {Object} props.currentUser - Der aktuelle Benutzer.
- * @param {function} props.setMongodbData - Eine Funktion zum Setzen der MongoDB-Daten.
- * @returns {JSX.Element} Die JSX-Elemente für die Zeichenfläche.
- */
-const Canvas = ({ ws, selectedColor, incrementClickCount, rectangles, setRectangles, isConnected, currentUser, setMongodbData }) => {
+const Canvas = ({ ws, selectedColor, rectangles, setRectangles, isConnected }) => {
   const [canSetPixel, setCanSetPixel] = useState(true);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setCanSetPixel(true);
-    }, 100); // Throttling durch Setzen eines Timers
+useEffect(() => {
+  if (ws) {
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log("Message received in Canvas:", data); // Logge empfangene Nachrichten
 
-    return () => clearTimeout(timer);
-  }, [canSetPixel]);
-
-  useEffect(() => {
-    if (ws) {
-      ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          console.log("Message received in Canvas:", data); // Logge empfangene Nachrichten
-          switch (data.type) {
-            case "userCount":
-              console.log("User count updated:", data.count);
-              break;
-            case "initialData":
-              console.log("Initial data received:", data.token);
-              // Speichern des Tokens oder andere Verarbeitung
-              break;
-            case "error":
-              console.error("Error received from server:", data.error);
-              break;
-            default:
-              console.log("Received pixel data:", data);
-              setRectangles((prevRectangles) => {
-                const index = prevRectangles.findIndex(rect => rect._id === data._id);
-                if (index !== -1) {
-                  const updatedRectangles = [...prevRectangles];
-                  updatedRectangles[index] = { ...updatedRectangles[index], color: data.color, edit: data.edit };
-                  return updatedRectangles;
-                } else {
-                  return [...prevRectangles, data];
-                }
-              });
-          }
-        } catch (error) {
-          console.error("Error parsing message from server: ", error);
+        if (data) {
+          console.log("Data exists");
+          console.log("Data format:", typeof data);
+          console.log("Data:", data);
+        } else {
+          console.log("Data is empty");
         }
-      };
-    }
-  }, [ws, setRectangles]);
 
-  const handleCanvasClick = (e) => {
-    if (!canSetPixel || !isConnected) return;
+        if (data.error) {
+          console.error("Error received from server:", data.error);
+          return;
+        }
 
-    const stage = e.target.getStage();
-    const pointerPosition = stage.getPointerPosition();
-    const id = `${Math.round(pointerPosition.x)}_${Math.round(pointerPosition.y)}`;
-    const colorChange = {
-      _id: id,
-      position_x: Math.round(pointerPosition.x),
-      position_y: Math.round(pointerPosition.y),
-      color: selectedColor || "white",
-      edit: {
-        time: new Date().toISOString(),
-        clickCounter: 0,
-        byUser: currentUser?.id || "Platzhalter", // Ersetzen Sie currentUser.id durch die tatsächliche Benutzer-ID
-      },
-    };
-
-    console.log("New rectangle created:", colorChange);
-
-    setRectangles((prevRectangles) => {
-      const index = prevRectangles.findIndex(rect => rect._id === id);
-      if (index !== -1) {
-        const updatedRectangles = [...prevRectangles];
-        updatedRectangles[index] = { ...updatedRectangles[index], color: colorChange.color, edit: colorChange.edit };
-        return updatedRectangles;
-      } else {
-        return [...prevRectangles, colorChange];
+        setRectangles((prevRectangles) => {
+          const index = prevRectangles.findIndex(rect => rect._id === data._id);
+          if (index !== -1) {
+            const updatedRectangles = [...prevRectangles];
+            updatedRectangles[index] = { ...updatedRectangles[index], color: data.color, timestamp: data.timestamp };
+            return updatedRectangles;
+          } else {
+            return [...prevRectangles, data];
+          }
+        });
+      } catch (error) {
+        console.error("Error parsing message from server: ", error);
       }
-    });
-    setCanSetPixel(false);
+    };
+  }
+}, [ws, setRectangles]);
 
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      console.log("Sending new rectangle data to server:", colorChange);
-      ws.send(JSON.stringify(colorChange));
-      incrementClickCount();
-      setMongodbData((prevData) => [...prevData, JSON.stringify(colorChange)]);
-    } else {
-      console.error("WebSocket connection is not open.");
-    }
+const handleCanvasClick = (e) => {
+  if (!canSetPixel || !isConnected) return;
+
+  const stage = e.target.getStage();
+  const pointerPosition = stage.getPointerPosition();
+  const id = `${Math.round(pointerPosition.x)}_${Math.round(pointerPosition.y)}`;
+  const pixelData = {
+    _id: id,
+    position_x: Math.round(pointerPosition.x),
+    position_y: Math.round(pointerPosition.y),
+    color: selectedColor || "white",
+    timestamp: new Date().toISOString(),
   };
 
+  console.log("New rectangle created:", pixelData);
+
+  setRectangles((prevRectangles) => {
+    const index = prevRectangles.findIndex(rect => rect._id === id);
+    if (index !== -1) {
+      const updatedRectangles = [...prevRectangles];
+      updatedRectangles[index] = { ...updatedRectangles[index], color: pixelData.color };
+      return updatedRectangles;
+    } else {
+      return [...prevRectangles, pixelData];
+    }
+  });
+  setCanSetPixel(false);
+
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    console.log("Sending new rectangle data to server:", pixelData);
+    ws.send(JSON.stringify(pixelData));
+  } else {
+    console.error("WebSocket connection is not open.");
+  }
+};
   return (
     <div id="canvas">
       <Stage
@@ -134,3 +104,34 @@ const Canvas = ({ ws, selectedColor, incrementClickCount, rectangles, setRectang
 };
 
 export default Canvas;
+
+
+
+/*
+state = {
+    stageScale: 1,
+    stageX: 0,
+    stageY: 0
+  };
+  handleWheel = (e) => {
+    e.evt.preventDefault();
+
+    const scaleBy = 1.02;
+    const stage = e.target.getStage();
+    const oldScale = stage.scaleX();
+    const mousePointTo = {
+      x: stage.getPointerPosition().x / oldScale - stage.x() / oldScale,
+      y: stage.getPointerPosition().y / oldScale - stage.y() / oldScale
+    };
+
+    const newScale = e.evt.deltaY > 0 ? oldScale * scaleBy : oldScale / scaleBy;
+
+    this.setState({
+      stageScale: newScale,
+      stageX:
+        -(mousePointTo.x - stage.getPointerPosition().x / newScale) * newScale,
+      stageY:
+        -(mousePointTo.y - stage.getPointerPosition().y / newScale) * newScale
+    });
+  };
+*/ 
